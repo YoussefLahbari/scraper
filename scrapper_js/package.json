@@ -1,0 +1,31 @@
+{
+  "name": "firmenregister-scraper",
+  "version": "1.0.0",
+  "description": "Scrape company data from firmenregister.de with IP rotation",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "electron": "^13.1.7",
+    "iconv-lite": "^0.6.3",
+    "jsdom": "^16.6.0",
+    "node-fetch": "^2.6.1",
+    "https-proxy-agent": "^5.0.0",
+    "socks-proxy-agent": "^6.1.0"
+  },
+  "devDependencies": {
+    "electron-builder": "^22.11.7"
+  },
+  "build": {
+    "appId": "com.firmenregister-scraper",
+    "productName": "Firmenregister Scraper",
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

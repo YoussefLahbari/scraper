@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firmenregister Scraper</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+        }
+        
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f8;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        h1, h2, h3 {
+            margin-top: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        select, input, button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .status {
+            padding: 15px;
+            border-left: 4px solid var(--secondary);
+            background-color: #eef5fd;
+            margin-bottom: 15px;
+        }
+        
+        .progress-container {
+            height: 24px;
+            width: 100%;
+            background-color: #ecf0f1;
+            border-radius: 12px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: var(--success);
+            width: 0;
+            transition: width 0.3s ease;
+            text-align: center;
+            line-height: 24px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .stat-card {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .stat-box {
+            flex: 1;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            text-align: center;
+            margin: 0 5px;
+        }
+        
+        .stat-box h3 {
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #888;
+        }
+        
+        .stat-box p {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+            color: var(--primary);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #7f8c8d;
+        }
+        
+        /* Add styles for proxy section and detailed stats */
+        .proxy-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .btn-secondary {
+            background-color: #7f8c8d;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: auto;
+            display: inline-block;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #6c7a7d;
+        }
+        
+        #proxy-status {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .stat-item {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .stat-label {
+            font-weight: bold;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .stat-value {
+            margin-left: 5px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Firmenregister.de Scraper</h1>
+            <p>Scrape company data by state from firmenregister.de</p>
+        </header>
+        
+        <div class="card">
+            <h2>Scrape Settings</h2>
+            <div class="form-group">
+                <label for="state-select">Select State:</label>
+                <select id="state-select">
+                    <option value="">Loading states...</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <button id="start-button" type="button">Start Scraping</button>
+            </div>
+            
+            <div class="form-group" style="display: none;" id="stop-container">
+                <button id="stop-button" type="button" class="btn-danger">Stop Scraping</button>
+            </div>
+            
+            <!-- Add proxy section -->
+            <div class="proxy-section">
+                <h3>Proxy Status</h3>
+                <div id="proxy-status">No proxies loaded</div>
+                <button id="refresh-proxies" class="btn-secondary">Refresh Proxies</button>
+            </div>
+        </div>
+        
+        <div class="card" id="progress-card" style="display: none;">
+            <h2>Scraping Progress</h2>
+            
+            <div class="status" id="status-message">
+                Ready to scrape...
+            </div>
+            
+            <h3>Page Progress</h3>
+            <div class="progress-container">
+                <div class="progress-bar" id="page-progress">0%</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-box">
+                    <h3>Companies Processed</h3>
+                    <p id="companies-count">0</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Current Page</h3>
+                    <p id="current-page">0</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Total Pages</h3>
+                    <p id="total-pages">0</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Response Time</h3>
+                    <p id="response-time">0ms</p>
+                </div>
+            </div>
+            
+            <!-- Add new stats section for complete metrics -->
+            <div class="stat-details" id="stats-container">
+                <h3>Detailed Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Total Companies:</span>
+                        <span class="stat-value" id="total-companies">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Successful Requests:</span>
+                        <span class="stat-value" id="success-requests">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Failed Requests:</span>
+                        <span class="stat-value" id="failed-requests">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Current Proxy:</span>
+                        <span class="stat-value" id="current-proxy">None</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" id="results-card" style="display: none;">
+            <h2>Results</h2>
+            <p id="results-message"></p>
+            <div class="form-group">
+                <button id="open-results-button" type="button">Open Results Folder</button>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Firmenregister Scraper v1.0.0</p>
+        </footer>
+    </div>
+    
+    <script>
+        const { ipcRenderer } = require('electron');
+        
+        // DOM Elements
+        const stateSelect = document.getElementById('state-select');
+        const startButton = document.getElementById('start-button');
+        const stopButton = document.getElementById('stop-button');
+        const stopContainer = document.getElementById('stop-container');
+        const statusMessage = document.getElementById('status-message');
+        const pageProgress = document.getElementById('page-progress');
+        const companiesCount = document.getElementById('companies-count');
+        const currentPage = document.getElementById('current-page');
+        const totalPages = document.getElementById('total-pages');
+        const progressCard = document.getElementById('progress-card');
+        const resultsCard = document.getElementById('results-card');
+        const resultsMessage = document.getElementById('results-message');
+        const openResultsButton = document.getElementById('open-results-button');
+        
+        // Add handlers for proxy elements
+        const refreshProxiesButton = document.getElementById('refresh-proxies');
+        const proxyStatusElement = document.getElementById('proxy-status');
+        const responseTimeElement = document.getElementById('response-time');
+        const totalCompaniesElement = document.getElementById('total-companies');
+        const successRequestsElement = document.getElementById('success-requests');
+        const failedRequestsElement = document.getElementById('failed-requests');
+        const currentProxyElement = document.getElementById('current-proxy');
+        
+        // Populate states dropdown when states arrive from main process
+        ipcRenderer.on('states', (event, states) => {
+            // Clear loading option
+            stateSelect.innerHTML = '';
+            
+            // Add default prompt
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '-- Select a State --';
+            stateSelect.appendChild(defaultOption);
+            
+            // Add state options
+            states.forEach(state => {
+                const option = document.createElement('option');
+                option.value = state.code;
+                option.textContent = state.name;
+                stateSelect.appendChild(option);
+            });
+        });
+        
+        // Handle start button click
+        startButton.addEventListener('click', () => {
+            const selectedState = stateSelect.value;
+            
+            if (!selectedState) {
+                alert('Please select a state first.');
+                return;
+            }
+            
+            // Show progress UI
+            progressCard.style.display = 'block';
+            stopContainer.style.display = 'block';
+            startButton.disabled = true;
+            
+            // Reset progress indicators
+            companiesCount.textContent = '0';
+            currentPage.textContent = '0';
+            totalPages.textContent = '0';
+            pageProgress.style.width = '0%';
+            pageProgress.textContent = '0%';
+            
+            // Hide results card if it was shown from previous run
+            resultsCard.style.display = 'none';
+            
+            // Send state to main process for scraping
+            ipcRenderer.send('downloadByState', selectedState);
+        });
+        
+        // Handle stop button click
+        stopButton.addEventListener('click', () => {
+            if (confirm('Are you sure you want to stop scraping? Progress will be saved.')) {
+                ipcRenderer.send('save');
+                stopButton.disabled = true;
+                stopButton.textContent = 'Stopping...';
+            }
+        });
+        
+        // Handle open results button click
+        openResultsButton.addEventListener('click', () => {
+            ipcRenderer.send('openFolder');
+        });
+        
+        // Add click handler for proxy refresh button
+        refreshProxiesButton.addEventListener('click', () => {
+            proxyStatusElement.textContent = 'Refreshing proxies...';
+            refreshProxiesButton.disabled = true;
+            ipcRenderer.send('refreshProxies');
+        });
+        
+        // Listen for proxy status updates
+        ipcRenderer.on('proxyStatus', (event, data) => {
+            proxyStatusElement.textContent = data.message;
+            refreshProxiesButton.disabled = false;
+        });
+        
+        // Listen for statistics updates
+        ipcRenderer.on('statistics', (event, stats) => {
+            responseTimeElement.textContent = `${stats.avgResponseTime}ms`;
+            totalCompaniesElement.textContent = stats.totalCompanies;
+            successRequestsElement.textContent = stats.successfulRequests;
+            failedRequestsElement.textContent = stats.failedRequests;
+            currentProxyElement.textContent = stats.currentProxy || 'None';
+        });
+        
+        // Update status message when received from main process
+        ipcRenderer.on('message', (event, message) => {
+            statusMessage.textContent = message;
+            
+            // If message indicates completion, enable start button
+            if (message.includes('Successfully saved')) {
+                startButton.disabled = false;
+                stopContainer.style.display = 'none';
+                
+                // Show results card with completion message
+                resultsCard.style.display = 'block';
+                resultsMessage.textContent = message;
+            } 
+            // If message indicates stopping, enable start button
+            else if (message.includes('Stopping')) {
+                setTimeout(() => {
+                    startButton.disabled = false;
+                    stopContainer.style.display = 'none';
+                    stopButton.disabled = false;
+                    stopButton.textContent = 'Stop Scraping';
+                }, 2000);
+            }
+        });
+        
+        // Update progress indicators
+        ipcRenderer.on('progress', (event, data) => {
+            // Update companies count
+            companiesCount.textContent = data.processed;
+            
+            // Update page info
+            currentPage.textContent = data.pages.current;
+            totalPages.textContent = data.pages.total;
+            
+            // Update progress bar
+            const progressPercent = data.pages.total > 0 
+                ? Math.round((data.pages.current / data.pages.total) * 100) 
+                : 0;
+            
+            pageProgress.style.width = `${progressPercent}%`;
+            pageProgress.textContent = `${progressPercent}%`;
+        });
+        
+        // Request states list at startup
+        ipcRenderer.send('getStates');
+        
+        // Request initial proxy status
+        ipcRenderer.send('getProxyStatus');
+    </script>
+</body>
+</html>

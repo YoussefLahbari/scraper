@@ -1,0 +1,11 @@
+.spacing-bottom {
+    margin-bottom: 5px;
+}
+
+.button {
+    width: 240px;
+}
+
+* {
+    outline: none;
+}
